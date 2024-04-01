@@ -1,5 +1,8 @@
+import { DataSourceOptions } from 'typeorm';
 import { AuthConfig, AuthType } from '../typings/manifest';
 import { readConfig } from './readYaml';
+
+export type DatabaseConfig = DataSourceOptions;
 
 export interface ServerConfig {
   port: number;
@@ -15,6 +18,7 @@ export interface RedisConfig {
 export interface Config {
   server: ServerConfig;
   redis: RedisConfig;
+  database: DatabaseConfig;
 }
 
 const port = readConfig('server.port', 3000);
@@ -35,6 +39,11 @@ export const config: Config = {
     url: readConfig('redis.url'),
     prefix: readConfig('redis.prefix', 'monkeys:'),
   },
+  database: readConfig('database', {
+    type: 'better-sqlite3',
+    database: 'data/db.sqlite',
+    synchronize: true,
+  }),
 };
 
 const validateConfig = () => {

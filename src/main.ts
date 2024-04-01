@@ -5,6 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 import { ExceptionsFilter } from './common/filters/exception.filter';
+import { logger } from './common/logger';
+import { WechatyService } from './modules/wechaty/wechaty.service';
 
 export const setupSwagger = (app: INestApplication) => {
   const builder = new DocumentBuilder()
@@ -35,6 +37,14 @@ export const setupSwagger = (app: INestApplication) => {
   SwaggerModule.setup('/openapi', app, document);
 };
 
+process.on('unhandledRejection', (err: Error) => {
+  logger.error('unhandledRejection: ', err);
+});
+
+process.on('uncaughtException', (err: Error) => {
+  logger.error('uncaughtException: ', err);
+});
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new ExceptionsFilter());
@@ -46,6 +56,9 @@ async function bootstrap() {
     origin: '*',
   });
 
+  setupSwagger(app);
+  const wechatyService = await app.resolve<WechatyService>(WechatyService);
+  await wechatyService.runExistingSessionsOnStartup();
   await app.listen(config.server.port);
 }
 bootstrap();

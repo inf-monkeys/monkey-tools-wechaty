@@ -16,9 +16,11 @@ export enum SchemaVersion {
 export enum CredentialAuthType {
   AKSK = 'AKSK',
   OAUTH2 = 'OAUTH2',
+  QRCODE = 'QRCODE',
 }
 
 export interface CredentialDefinition {
+  trigger?: boolean;
   name: string;
   displayName: string;
   properties: BlockDefProperties[];
