@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as uuid from 'uuid';
 import {
-  WechatSessionEntity,
+  WechatySessionEntity,
   WechatySessionStatus,
 } from '../entities/wechaty-session.entity';
 
@@ -23,13 +23,13 @@ export interface UpdateWechatySessionParams {
 @Injectable()
 export class WechatyRepository {
   constructor(
-    @InjectRepository(WechatSessionEntity)
-    public readonly wechatSessionRepo: Repository<WechatSessionEntity>,
+    @InjectRepository(WechatySessionEntity)
+    public readonly wechatySessionRepo: Repository<WechatySessionEntity>,
   ) {}
 
-  public async initSession(params: InitSessionParams) {
+  public async createSession(params: InitSessionParams) {
     const { teamId, userId, puppet } = params;
-    const entity = new WechatSessionEntity();
+    const entity = new WechatySessionEntity();
     entity.createdTimestamp = +new Date();
     entity.updatedTimestamp = +new Date();
     entity.isDeleted = false;
@@ -38,12 +38,31 @@ export class WechatyRepository {
     entity.sessionId = uuid.v4();
     entity.puppet = puppet;
     entity.status = WechatySessionStatus.WAIT_FOR_QRCODE_GENERATE;
-    await this.wechatSessionRepo.save(entity);
-    return entity.sessionId;
+    await this.wechatySessionRepo.save(entity);
+    return entity;
+  }
+
+  public async createSessionIfNoeExists(
+    params: InitSessionParams,
+  ): Promise<[boolean, WechatySessionEntity]> {
+    const { teamId, userId, puppet } = params;
+    const session = await this.wechatySessionRepo.findOne({
+      where: {
+        teamId,
+        userId,
+        puppet,
+        status: WechatySessionStatus.LOGGED_IN,
+      },
+    });
+    if (session) {
+      return [false, session];
+    } else {
+      return [true, await this.createSession(params)];
+    }
   }
 
   public async getSession(sessionId: string) {
-    return await this.wechatSessionRepo.findOne({
+    return await this.wechatySessionRepo.findOne({
       where: {
         sessionId,
       },
@@ -52,7 +71,7 @@ export class WechatyRepository {
 
   public async updateSession(params: UpdateWechatySessionParams) {
     const { sessionId, memoryCard, status, qrcodeUrl } = params;
-    const session = await this.wechatSessionRepo.findOne({
+    const session = await this.wechatySessionRepo.findOne({
       where: {
         sessionId,
       },
@@ -66,11 +85,11 @@ export class WechatyRepository {
     if (qrcodeUrl) {
       session.qrcodeUrl = qrcodeUrl;
     }
-    await this.wechatSessionRepo.save(session);
+    await this.wechatySessionRepo.save(session);
   }
 
   public async findOneValidSession(startupTimestamp: number) {
-    const session = await this.wechatSessionRepo
+    const session = await this.wechatySessionRepo
       .createQueryBuilder('session')
       .where('session.status = :status', {
         status: WechatySessionStatus.LOGGED_IN,
@@ -83,7 +102,7 @@ export class WechatyRepository {
 
     if (session) {
       session.lastFetchedAt = +new Date();
-      await this.wechatSessionRepo.save(session);
+      await this.wechatySessionRepo.save(session);
     }
     return session;
   }

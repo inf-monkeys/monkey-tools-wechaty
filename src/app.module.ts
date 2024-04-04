@@ -7,6 +7,7 @@ import { CommonMiddleware } from './common/middlewares/common.middleware';
 import { DatabaseModule } from './database/database.module';
 import { RepositoryMoule } from './database/repositories.module';
 import { WechatyModule } from './modules/wechaty/wechaty.module';
+import { TriggerModule } from './modules/trigger/trigger.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { WechatyModule } from './modules/wechaty/wechaty.module';
     WechatyModule,
     DatabaseModule,
     RepositoryMoule,
+    TriggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

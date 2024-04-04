@@ -1,6 +1,9 @@
 import { logger } from '@/common/logger';
 import { sleep } from '@/common/utils';
-import { WechatySessionStatus } from '@/database/entities/wechaty-session.entity';
+import {
+  WechatySessionEntity,
+  WechatySessionStatus,
+} from '@/database/entities/wechaty-session.entity';
 import { WechatyRepository } from '@/database/repostories/wechaty.repository';
 import { Injectable } from '@nestjs/common';
 import fs from 'fs';
@@ -62,6 +65,10 @@ export class WechatyService {
         status: WechatySessionStatus.LOGGED_IN,
         memoryCard,
       });
+
+      const contacts = await bot.Contact.findAll();
+      console.log('contacts: ', contacts);
+      console.log(contacts);
     };
 
     const onLogout = async (user: Contact) => {
@@ -130,15 +137,21 @@ export class WechatyService {
       .catch((e) => log.error('WechatyBot', e));
   }
 
-  public async initSession(teamId: string, userId: string) {
-    const puppet = 'wechaty-puppet-wechat';
-    const sessionId = await this.wechatyRepository.initSession({
-      teamId,
-      userId,
-      puppet,
-    });
-    await this.runWechatySession(sessionId);
-    return sessionId;
+  public async initSession(
+    teamId: string,
+    userId: string,
+    puppet: string,
+  ): Promise<[boolean, WechatySessionEntity]> {
+    const [created, session] =
+      await this.wechatyRepository.createSessionIfNoeExists({
+        teamId,
+        userId,
+        puppet,
+      });
+    if (!created) {
+      await this.runWechatySession(session.sessionId);
+    }
+    return [created, session];
   }
 
   public async getSession(sessionId: string) {

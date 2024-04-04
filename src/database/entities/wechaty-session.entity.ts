@@ -10,7 +10,7 @@ export enum WechatySessionStatus {
 
 @Entity({ name: 'wechaty_session' })
 @Index(['sessionId'], { unique: true })
-export class WechatSessionEntity extends BaseEntity {
+export class WechatySessionEntity extends BaseEntity {
   @VersionColumn()
   version: number;
 

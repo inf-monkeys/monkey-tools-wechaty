@@ -3,7 +3,6 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { config } from './common/config';
 import {
   ApiType,
-  CredentialAuthType,
   ManifestJson,
   SchemaVersion,
 } from './common/typings/manifest';
@@ -33,14 +32,19 @@ export class AppController {
         url: `/openapi-json`,
       },
       contact_email: 'dev@inf-monkeys.com',
-      credentials: [
+      triggerEndpoint: {
+        url: '/triggers',
+        method: 'post',
+      },
+      triggers: [
         {
-          trigger: true,
-          name: 'wechaty-wechat',
-          displayName: '微信',
+          type: 'wechaty-wechat',
+          displayName: '微信消息触发',
+          description: '通过微信消息触发工作流',
+          icon: 'emoji:🤖:#f2c1be',
           properties: [
             {
-              name: 'qrcode',
+              name: 'sessionId',
               displayName: '请扫描二维码',
               type: 'qrcode' as any,
               typeOptions: {
@@ -61,8 +65,6 @@ export class AppController {
               required: true,
             },
           ],
-          logo: '',
-          type: CredentialAuthType.QRCODE,
         },
       ],
     };

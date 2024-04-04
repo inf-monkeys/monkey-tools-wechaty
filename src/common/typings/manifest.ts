@@ -28,10 +28,23 @@ export interface CredentialDefinition {
   type: CredentialAuthType;
 }
 
+export interface TriggerDefinition {
+  description: string;
+  displayName: string;
+  properties: BlockDefProperties[];
+  icon: string;
+  type: string;
+}
+
 export interface AuthConfig {
   type: AuthType;
   authorization_type?: 'bearer';
   verification_tokens?: { [x: string]: string };
+}
+
+export interface TriggerEndpointConfig {
+  url: string;
+  method: string;
 }
 
 export interface ManifestJson {
@@ -44,6 +57,8 @@ export interface ManifestJson {
     url: string;
   };
   contact_email: string;
+  triggerEndpoint?: TriggerEndpointConfig;
+  triggers?: TriggerDefinition[];
   credentials?: CredentialDefinition[];
   credentialEncryptKey?: string;
 }
