@@ -60,5 +60,7 @@ async function bootstrap() {
   const wechatyService = await app.resolve<WechatyService>(WechatyService);
   await wechatyService.runExistingSessionsOnStartup();
   await app.listen(config.server.port);
+
+  logger.info(`🚀: Runs at port: ${config.server.port}`);
 }
 bootstrap();

@@ -5,7 +5,7 @@
       "type": "node",
       "request": "attach",
       "name": "Attach NestJS WS",
-      "port": 9229,
+      "port": 9239,
       "restart": true,
     }
   ]

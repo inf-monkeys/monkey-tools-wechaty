@@ -4,17 +4,82 @@ import {
   WechatySessionEntity,
   WechatySessionStatus,
 } from '@/database/entities/wechaty-session.entity';
-import { WechatyRepository } from '@/database/repostories/wechaty.repository';
+import { WechatyRepository } from '@/database/repostories/wechaty-session.repository';
+import { TriggerRepository } from '@/database/repostories/wechaty-trigger.repository';
 import { Injectable } from '@nestjs/common';
+import axios from 'axios';
 import fs from 'fs';
 import { Contact, Message, ScanStatus, WechatyBuilder, log } from 'wechaty';
 
 @Injectable()
 export class WechatyService {
-  constructor(private readonly wechatyRepository: WechatyRepository) {}
+  constructor(
+    private readonly wechatyRepository: WechatyRepository,
+    private readonly triggerRepository: TriggerRepository,
+  ) {}
 
   private getMemoryCardFile(sessionId: string) {
     return `./${sessionId}.memory-card.json`;
+  }
+
+  private async filterUselessMsg(msg: Message) {
+    const msgContext = msg.text();
+    if (!msgContext) {
+      return false;
+    }
+    if (msg.self()) {
+      return false;
+    }
+    return true;
+  }
+
+  private async triggerWorkflow(sessionId: string, msg: Message) {
+    const msgId = msg.id;
+    const msgType = msg.type();
+    const msgFrom = msg.talker();
+    const msgTalkerName = msg.talker().name();
+    const msgTalkerId = msg.talker().id;
+    const msgContext = msg.text();
+    if (!msgContext) {
+      return;
+    }
+    const trigger =
+      await this.triggerRepository.getTriggerBySessionId(sessionId);
+    if (!trigger) {
+      return;
+    }
+    const {
+      triggerEndpoint,
+      msgType: filterMsgType,
+      msgTalkerName: filterMsgTalkerNames,
+    } = trigger;
+    if (filterMsgType != msgType) {
+      logger.info(`Msg type not match, discard`);
+      return;
+    }
+    if (!filterMsgTalkerNames.includes(msgTalkerName)) {
+      logger.info(`Msg msgTalkerName not match, discard`);
+      return;
+    }
+    try {
+      const { data } = await axios.post(triggerEndpoint, {
+        msgId,
+        msgType,
+        msgFrom,
+        msgContext,
+        msgTalkerName,
+        msgTalkerId,
+        // wait workflow finish to get response
+        sync: true,
+      });
+      logger.info(`Trigegr ${trigger.triggerId} start workflow success`, data);
+      return data;
+    } catch (error) {
+      logger.error(
+        `Trigegr ${trigger.triggerId} start workflow failed`,
+        error.message,
+      );
+    }
   }
 
   private async runWechatySession(sessionId: string) {
@@ -65,10 +130,6 @@ export class WechatyService {
         status: WechatySessionStatus.LOGGED_IN,
         memoryCard,
       });
-
-      const contacts = await bot.Contact.findAll();
-      console.log('contacts: ', contacts);
-      console.log(contacts);
     };
 
     const onLogout = async (user: Contact) => {
@@ -81,8 +142,14 @@ export class WechatyService {
 
     const onMessage = async (msg: Message) => {
       log.info(
-        `WechatyBot onMessage: message_id=${msg.id}, message_type=${msg.type()}, message_from=${msg.talker()}, message_content=${msg.text()}`,
+        `WechatyBot onMessage: message_id=${msg.id}, message_type=${msg.type()}, message_from=${msg.talker().name()}, message_content=${msg.text()}`,
       );
+      if (this.filterUselessMsg(msg)) {
+        const response = await this.triggerWorkflow(sessionId, msg);
+        if (response) {
+          await msg.say(response.response);
+        }
+      }
     };
 
     const bot = WechatyBuilder.build({
@@ -148,7 +215,7 @@ export class WechatyService {
         userId,
         puppet,
       });
-    if (!created) {
+    if (created) {
       await this.runWechatySession(session.sessionId);
     }
     return [created, session];

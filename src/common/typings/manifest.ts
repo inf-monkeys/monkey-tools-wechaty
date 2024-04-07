@@ -1,4 +1,5 @@
 import { BlockDefProperties } from '@inf-monkeys/vines';
+import { Method } from 'axios';
 
 export enum AuthType {
   none = 'none',
@@ -42,9 +43,16 @@ export interface AuthConfig {
   verification_tokens?: { [x: string]: string };
 }
 
+export enum TriggerEndpointType {
+  create = 'create',
+  update = 'update',
+  delete = 'delete',
+}
+
 export interface TriggerEndpointConfig {
+  type: TriggerEndpointType;
   url: string;
-  method: string;
+  method: Method;
 }
 
 export interface ManifestJson {
@@ -57,7 +65,7 @@ export interface ManifestJson {
     url: string;
   };
   contact_email: string;
-  triggerEndpoint?: TriggerEndpointConfig;
+  triggerEndpoints?: TriggerEndpointConfig[];
   triggers?: TriggerDefinition[];
   credentials?: CredentialDefinition[];
   credentialEncryptKey?: string;
