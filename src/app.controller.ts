@@ -57,6 +57,38 @@ export class AppController {
           displayName: '微信消息',
           description: '通过微信消息触发工作流',
           icon: 'emoji:🤖:#f2c1be',
+          workflowInputs: [
+            {
+              name: 'msgId',
+              displayName: '微信消息 ID',
+              required: true,
+              type: 'string',
+            },
+            {
+              name: 'msgType',
+              displayName: '微信消息类型',
+              required: true,
+              type: 'number',
+            },
+            {
+              name: 'msgContent',
+              displayName: '微信消息文本内容',
+              required: true,
+              type: 'number',
+            },
+            {
+              name: 'msgTalkerId',
+              displayName: '微信消息发送人 ID',
+              required: true,
+              type: 'string',
+            },
+            {
+              name: 'msgTalkerName',
+              displayName: '微信消息发送人名称',
+              required: true,
+              type: 'string',
+            },
+          ],
           properties: [
             {
               name: 'msgType',
@@ -135,6 +167,7 @@ export class AppController {
               typeOptions: {
                 multipleValues: true,
               },
+              required: true,
             },
             {
               name: 'msgTalkerName',
@@ -143,6 +176,7 @@ export class AppController {
               typeOptions: {
                 multipleValues: true,
               },
+              required: true,
             },
             {
               name: 'sessionId',

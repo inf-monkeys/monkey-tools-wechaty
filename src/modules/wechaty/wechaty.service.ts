@@ -39,8 +39,8 @@ export class WechatyService {
     const msgFrom = msg.talker();
     const msgTalkerName = msg.talker().name();
     const msgTalkerId = msg.talker().id;
-    const msgContext = msg.text();
-    if (!msgContext) {
+    const msgContent = msg.text();
+    if (!msgContent) {
       return;
     }
     const trigger =
@@ -66,7 +66,7 @@ export class WechatyService {
         msgId,
         msgType,
         msgFrom,
-        msgContext,
+        msgContent,
         msgTalkerName,
         msgTalkerId,
         // wait workflow finish to get response
